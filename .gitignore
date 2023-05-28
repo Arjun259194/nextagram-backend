@@ -1,0 +1,24 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Output directories
+bin/
+obj/
+
+# Go specific
+*.o
+*.a
+*.test
+*.prof
+*.out
+*.test
+*.test~
+_test
+
+# Go modules
+vendor/
+
