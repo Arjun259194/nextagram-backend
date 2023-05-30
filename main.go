@@ -3,25 +3,17 @@ package main
 import (
 	"log"
 
-	"github.com/Arjun259194/nextagram-backend/database"
-	"github.com/Arjun259194/nextagram-backend/routes"
-	"github.com/gofiber/fiber/v2"
+	"github.com/Arjun259194/nextagram-backend/api"
+)
+
+const (
+	PORT           string = ":8080"
+	DB_CONN_STRING string = "mongodb+srv://mongo:arjun259@cluster0.12gakmk.mongodb.net/mgmt_db"
 )
 
 func main() {
-	err := database.Connect("./database.db")
-	if err != nil {
-		log.Printf("Error connecting databse - %v", err)
-	}
-
-	defer database.Close()
-
-	app := fiber.New()
-
-	authGroup := app.Group("/auth")
-	routes.AuthRoutes(authGroup)
-
-	log.Fatal(app.Listen(":8080"))
+	server := api.NewServer(PORT, DB_CONN_STRING)
+	log.Fatal(server.Start())
 }
 
 // app.Post("/upload", func(c *fiber.Ctx) error {
