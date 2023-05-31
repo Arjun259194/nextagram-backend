@@ -16,3 +16,14 @@ func NewHTTPOnlyCookie(token string) *fiber.Cookie {
 		Secure:   false,
 	}
 }
+
+func EmptyCookie() *fiber.Cookie {
+	return &fiber.Cookie{
+		Name:     "accessToken",
+		Value:    "",
+		HTTPOnly: true,
+		Expires:  time.Unix(0, 0),
+		Path:     "/",
+		Secure:   false,
+	}
+}

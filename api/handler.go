@@ -20,7 +20,6 @@ const (
 )
 
 func PostRegisterHandler(c *fiber.Ctx) error {
-	fmt.Println("Register handler called")
 	reqBodyByte := c.Body()
 	var reqBody types.RegisterRequestBody
 
@@ -42,22 +41,16 @@ func PostRegisterHandler(c *fiber.Ctx) error {
 
 	user := types.NewUser(reqBody.Name, reqBody.Email, reqBody.Gender, hashedPassword)
 
-	result, err := Storage.CreateUser(user)
-
-	if err != nil {
-		fmt.Printf("Error while inserting into database - %v\n", err)
+	if _, err = Storage.CreateUser(user); err != nil {
 		errRes := types.NewErrorResponse(INTERNAL_SERVER_ERROR, err, "Error while inserting into database")
 		return c.Status(INTERNAL_SERVER_ERROR).JSON(errRes)
 	}
-
-	fmt.Printf("\nInserted with id - %v\n", result.InsertedID)
 
 	res := types.NewSuccessResponse(CREATED, nil, "User Created")
 	return c.Status(CREATED).JSON(res)
 }
 
 func PostLoginHandler(c *fiber.Ctx) error {
-	fmt.Println("Login handler called")
 	reqBodyByte := c.Body()
 	var reqBody types.LoginRequestBody
 
@@ -74,14 +67,14 @@ func PostLoginHandler(c *fiber.Ctx) error {
 	result := Storage.SearchUserByEmail(reqBody.Email)
 
 	var foundUser types.User
-	err := result.Decode(&foundUser)
-	if err != nil {
+
+	if err := result.Decode(&foundUser); err != nil {
 		fmt.Printf("\nerror while marshaling foundUser data - %v\n", err)
 		errRes := types.NewErrorResponse(NOT_FOUND, err, "User not found")
 		return c.Status(NOT_FOUND).JSON(errRes)
 	}
 
-	if err = utils.ComparePasswords(foundUser.Password, reqBody.Password); err != nil {
+	if err := utils.ComparePasswords(foundUser.Password, reqBody.Password); err != nil {
 		fmt.Printf("Password not matched - %v", err)
 		errRes := types.NewErrorResponse(UNAUTHORIZED, err, "Wrong password")
 		return c.Status(UNAUTHORIZED).JSON(errRes)
@@ -89,6 +82,7 @@ func PostLoginHandler(c *fiber.Ctx) error {
 
 	token, err := utils.GenerateToken(foundUser.ID)
 	if err != nil {
+		fmt.Printf("Error while creating json web token - %v", err)
 		errRes := types.NewErrorResponse(INTERNAL_SERVER_ERROR, err, "Error while generating token")
 		c.Status(INTERNAL_SERVER_ERROR).JSON(errRes)
 	}
@@ -98,5 +92,12 @@ func PostLoginHandler(c *fiber.Ctx) error {
 	c.Cookie(accessCookie)
 
 	res := types.NewSuccessResponse(OK, nil, "Logged In")
+
 	return c.Status(OK).JSON(res)
+}
+
+func PostLogoutHandler(c *fiber.Ctx) error {
+	cookie := utils.EmptyCookie()
+	c.Cookie(cookie)
+	return c.SendStatus(OK)
 }

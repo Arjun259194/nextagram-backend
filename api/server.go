@@ -33,6 +33,10 @@ func (s *Server) Start() error {
 }
 
 func setRoutes(server *fiber.App) {
+	//authorization routes
 	server.Post("auth/register", PostRegisterHandler)
 	server.Post("auth/login", PostLoginHandler)
+	server.Post("auth/logout", PostLogoutHandler)
+
+	//post routes
 }
