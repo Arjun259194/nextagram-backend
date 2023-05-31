@@ -21,6 +21,7 @@ func NewServer(listenAddr, dbConnString string) *Server {
 
 func (s *Server) Start() error {
 	Storage = database.NewConnection(s.DbConnString)
+
 	Storage.Connect()
 	defer Storage.Close()
 
@@ -33,4 +34,5 @@ func (s *Server) Start() error {
 
 func setRoutes(server *fiber.App) {
 	server.Post("auth/register", PostRegisterHandler)
+	server.Post("auth/login", PostLoginHandler)
 }

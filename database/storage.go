@@ -14,11 +14,13 @@ type Storage struct {
 	ConnectionString string
 	Client           *mongo.Client
 	UserModel        *mongo.Collection
+	Ctx              context.Context
 }
 
 func NewConnection(connectionString string) *Storage {
 	return &Storage{
 		ConnectionString: connectionString,
+		Ctx:              context.Background(),
 	}
 }
 
@@ -26,12 +28,12 @@ func (s *Storage) Connect() {
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI(s.ConnectionString).SetServerAPIOptions(serverAPI)
 
-	client, err := mongo.Connect(context.Background(), opts)
+	client, err := mongo.Connect(s.Ctx, opts)
 	if err != nil {
 		log.Fatalf("Error while connecting to database in storage.go - %v", err)
 	}
 
-	if err = client.Ping(context.Background(), nil); err != nil {
+	if err = client.Ping(s.Ctx, nil); err != nil {
 		log.Fatalf("Error while sending ping to database - %v", err)
 	}
 
@@ -46,14 +48,14 @@ func (s *Storage) Connect() {
 		Options: options.Index().SetUnique(true),
 	}
 
-	_, err = s.UserModel.Indexes().CreateOne(context.Background(), indexModel)
+	_, err = s.UserModel.Indexes().CreateOne(s.Ctx, indexModel)
 	if err != nil {
 		log.Fatalf("Error while creating unique index on email field - %v", err)
 	}
 }
 
 func (s *Storage) Close() {
-	if err := s.Client.Disconnect(context.Background()); err != nil {
+	if err := s.Client.Disconnect(s.Ctx); err != nil {
 		log.Fatalf("Error while disconnecting database in storage.go - %v", err)
 	}
 }
