@@ -7,6 +7,8 @@ import (
 	"github.com/Arjun259194/nextagram-backend/types"
 	"github.com/Arjun259194/nextagram-backend/utils"
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 //Authorization handler
@@ -101,12 +103,52 @@ func postLogoutHandler(c *fiber.Ctx) error {
 
 // "/user/profile"
 func getUserProfileHandler(c *fiber.Ctx) error {
-	return nil
+	userID := c.Locals("id").(primitive.ObjectID)
+	result := Storage.SearchUserById(userID)
+
+	var user types.User
+	if err := result.Decode(&user); err != nil {
+		if err == mongo.ErrNoDocuments {
+			var errRes types.ErrorResponse
+			if err == mongo.ErrNoDocuments {
+				errRes = types.NewErrorResponse(fiber.StatusNotFound, err, "User not found")
+				return c.Status(fiber.StatusNotFound).JSON(errRes)
+			} else {
+				errRes = types.NewErrorResponse(fiber.StatusInternalServerError, err, "Error while fetching user from database")
+				return c.SendStatus(fiber.StatusInternalServerError)
+			}
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(user)
 }
 
 // "/user/:id"
 func getUserHandler(c *fiber.Ctx) error {
-	return nil
+	strID := c.Params("id")
+	userID, err := primitive.ObjectIDFromHex(strID)
+	if err != nil {
+		errRes := types.NewErrorResponse(fiber.StatusBadRequest, err, "User Id not valid")
+		return c.Status(fiber.StatusBadRequest).JSON(errRes)
+	}
+
+	result := Storage.SearchUserById(userID)
+
+	var user types.User
+	if err := result.Decode(&user); err != nil {
+		if err == mongo.ErrNoDocuments {
+			var errRes types.ErrorResponse
+			if err == mongo.ErrNoDocuments {
+				errRes = types.NewErrorResponse(fiber.StatusNotFound, err, "User not found")
+				return c.Status(fiber.StatusNotFound).JSON(errRes)
+			} else {
+				errRes = types.NewErrorResponse(fiber.StatusInternalServerError, err, "Error while fetching user from database")
+				return c.SendStatus(fiber.StatusInternalServerError)
+			}
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(user)
 }
 
 // "/user/profile"

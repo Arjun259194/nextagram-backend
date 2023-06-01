@@ -1,12 +1,15 @@
 package api
 
 import (
+	"github.com/Arjun259194/nextagram-backend/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
 func setRoutes(server *fiber.App) {
 	setAuthRoutes(server)
+  setUserRoutes(server)
 }
+
 
 func setAuthRoutes(server *fiber.App) {
 	//authorization routes
@@ -16,10 +19,10 @@ func setAuthRoutes(server *fiber.App) {
 }
 
 func setUserRoutes(server *fiber.App) {
-	server.Get("/user/profile", getUserProfileHandler)
-	server.Get("/user/:id", getUserHandler)
-	server.Get("/user/search", getUserSearchHandler)
-	server.Put("/user/:id/follow", putUserFollowOrUnFollowHandler)
-	server.Put("/user/profile", putUserProfileUpdateHandler)
-	server.Put("/user/password", putUserPasswordUpdateHandler)
+	server.Get("/user/profile", utils.JWTMiddleware, getUserProfileHandler)
+	server.Get("/user/:id", utils.JWTMiddleware, getUserHandler)
+	server.Get("/user/search", utils.JWTMiddleware, getUserSearchHandler)
+	server.Put("/user/:id/follow", utils.JWTMiddleware, putUserFollowOrUnFollowHandler)
+	server.Put("/user/profile", utils.JWTMiddleware, putUserProfileUpdateHandler)
+	server.Put("/user/password", utils.JWTMiddleware, putUserPasswordUpdateHandler)
 }
