@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Arjun259194/nextagram-backend/types"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -44,4 +46,31 @@ func VerifyToken(tokenString string) (jwt.MapClaims, error) {
 	} else {
 		return nil, fmt.Errorf("invalid token")
 	}
+}
+
+func JWTMiddleware(c *fiber.Ctx) error {
+	tokenCookie := c.Cookies("accessToken")
+	if tokenCookie == "" {
+		errRes := types.NewErrorResponse(fiber.StatusUnauthorized, fmt.Errorf("There is not access token saved on you device"), "User not authorized")
+		return c.Status(fiber.StatusUnauthorized).JSON(errRes)
+	}
+
+	claim, err := VerifyToken(tokenCookie)
+	if err != nil {
+		errRes := types.NewErrorResponse(fiber.StatusUnauthorized, err, "User not authorized")
+		return c.Status(fiber.StatusUnauthorized).JSON(errRes)
+	}
+
+	id := claim["id"].(string)
+
+	// Here we are converting string Id into mongoDB objectID because to make sure that it's a valid objectID and because our Go driver only uses objectID type
+	userObjectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		errRes := types.NewErrorResponse(fiber.StatusBadRequest, err, "User Id not valid")
+		return c.Status(fiber.StatusBadRequest).JSON(errRes)
+	}
+
+	c.Locals("id", userObjectID)
+
+	return c.Next()
 }

@@ -1,9 +1,8 @@
 package database
 
 import (
-	"fmt"
-
 	"github.com/Arjun259194/nextagram-backend/types"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -13,7 +12,13 @@ func (s *Storage) CreateUser(user *types.User) (*mongo.InsertOneResult, error) {
 }
 
 func (s *Storage) SearchUserByEmail(email string) *mongo.SingleResult {
-	result := s.UserModel.FindOne(s.Ctx, bson.M{"email": email})
-	fmt.Println(result)
-	return result
+	filter := bson.M{"email": email}
+	context := s.Ctx
+	return s.UserModel.FindOne(context, filter)
+}
+
+func (s *Storage) SearchUserById(id primitive.ObjectID) *mongo.SingleResult {
+	filter := bson.M{"_id": id}
+	context := s.Ctx
+	return s.UserModel.FindOne(context, filter)
 }
