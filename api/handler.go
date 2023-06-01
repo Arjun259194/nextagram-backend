@@ -9,7 +9,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func PostRegisterHandler(c *fiber.Ctx) error {
+//Authorization handler
+
+// "/auth/register"
+func postRegisterHandler(c *fiber.Ctx) error {
 	reqBodyByte := c.Body()
 	var reqBody types.RegisterRequestBody
 
@@ -40,7 +43,8 @@ func PostRegisterHandler(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(res)
 }
 
-func PostLoginHandler(c *fiber.Ctx) error {
+// "/auth/login"
+func postLoginHandler(c *fiber.Ctx) error {
 	reqBodyByte := c.Body()
 	var reqBody types.LoginRequestBody
 
@@ -86,8 +90,41 @@ func PostLoginHandler(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(res)
 }
 
-func PostLogoutHandler(c *fiber.Ctx) error {
+// "/auth/logout"
+func postLogoutHandler(c *fiber.Ctx) error {
 	cookie := utils.EmptyCookie()
 	c.Cookie(cookie)
 	return c.SendStatus(fiber.StatusOK)
+}
+
+//User handler
+
+// "/user/profile"
+func getUserProfileHandler(c *fiber.Ctx) error {
+	return nil
+}
+
+// "/user/:id"
+func getUserHandler(c *fiber.Ctx) error {
+	return nil
+}
+
+// "/user/profile"
+func putUserProfileUpdateHandler(c *fiber.Ctx) error {
+	return nil
+}
+
+// "/user/:id/follow"
+func putUserFollowOrUnFollowHandler(c *fiber.Ctx) error {
+	return nil
+}
+
+// "/user/search?q=search+query"
+func getUserSearchHandler(c *fiber.Ctx) error {
+	return nil
+}
+
+// "user/passwordChange"
+func putUserPasswordUpdateHandler(c *fiber.Ctx) error {
+	return nil
 }
