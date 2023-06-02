@@ -120,7 +120,8 @@ func getUserProfileHandler(c *fiber.Ctx) error {
 		}
 	}
 
-	return c.Status(fiber.StatusOK).JSON(user)
+	res := types.NewSuccessResponse(fiber.StatusOK, user, "User found")
+	return c.Status(fiber.StatusOK).JSON(res)
 }
 
 // "/user/:id"
@@ -148,12 +149,32 @@ func getUserHandler(c *fiber.Ctx) error {
 		}
 	}
 
-	return c.Status(fiber.StatusOK).JSON(user)
+	res := types.NewSuccessResponse(fiber.StatusOK, user, "User found")
+	return c.Status(fiber.StatusOK).JSON(res)
 }
 
 // "/user/profile"
 func putUserProfileUpdateHandler(c *fiber.Ctx) error {
-	return nil
+	userID := c.Locals("id").(primitive.ObjectID)
+
+	updateBytes := c.Body()
+
+	var update types.UpgradeRouteReqBody
+	if err := json.Unmarshal(updateBytes, &update); err != nil {
+		errRes := types.NewErrorResponse(fiber.StatusBadRequest, err, "request body not valid")
+		return c.Status(fiber.StatusBadRequest).JSON(errRes)
+	}
+
+	result := Storage.UpdateUserById(userID, update)
+
+	var user types.User
+	if err := result.Decode(&user); err != nil {
+		errRes := types.NewErrorResponse(fiber.StatusInternalServerError, err, "Error while updating in database")
+		return c.Status(fiber.StatusInternalServerError).JSON(errRes)
+	}
+
+	res := types.NewSuccessResponse(fiber.StatusOK, user, "User data updated")
+	return c.Status(fiber.StatusOK).JSON(res)
 }
 
 // "/user/:id/follow"

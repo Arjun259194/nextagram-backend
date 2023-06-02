@@ -77,3 +77,9 @@ func (r *RegisterRequestBody) Validate() error {
 	}
 	return nil
 }
+
+type UpgradeRouteReqBody struct {
+	Name     string `json:"name" validate:"required"`
+	Email    string `json:"email" validate:"required"`
+	Gender   string `json:"gender" validate:"required"`
+}
