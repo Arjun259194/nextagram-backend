@@ -1,6 +1,9 @@
 package types
 
-import "errors"
+import (
+	"errors"
+	"net/http"
+)
 
 type ErrorResponse struct {
 	Status  string `json:"status"`
@@ -14,19 +17,19 @@ type SuccessResponse struct {
 	ResponseData interface{} `json:"responseData"`
 }
 
-var StatusCode map[int]string = map[int]string{
-	400: "BAD_REQUEST",
-	404: "NOT_FOUND",
-	502: "BAD_GATEWAY",
-	200: "OK",
-	201: "CREATED",
-	500: "INTERNAL_SERVER_ERROR",
-	401: "UNAUTHORIZED",
-}
+// var StatusCode map[int]string = map[int]string{
+// 	400: "BAD_REQUEST",
+// 	404: "NOT_FOUND",
+// 	502: "BAD_GATEWAY",
+// 	200: "OK",
+// 	201: "CREATED",
+// 	500: "INTERNAL_SERVER_ERROR",
+// 	401: "UNAUTHORIZED",
+// }
 
 func NewErrorResponse(code int, err error, message string) ErrorResponse {
 	return ErrorResponse{
-		Status:  StatusCode[code],
+		Status:  http.StatusText(code),
 		Message: message,
 		Error:   err.Error(),
 	}
@@ -34,7 +37,7 @@ func NewErrorResponse(code int, err error, message string) ErrorResponse {
 
 func NewSuccessResponse(code int, data interface{}, message string) SuccessResponse {
 	return SuccessResponse{
-		Status:       StatusCode[code],
+		Status:       http.StatusText(code),
 		ResponseData: data,
 		Message:      message,
 	}
@@ -79,7 +82,7 @@ func (r *RegisterRequestBody) Validate() error {
 }
 
 type UpgradeRouteReqBody struct {
-	Name     string `json:"name" validate:"required"`
-	Email    string `json:"email" validate:"required"`
-	Gender   string `json:"gender" validate:"required"`
+	Name   string `json:"name" validate:"required"`
+	Email  string `json:"email" validate:"required"`
+	Gender string `json:"gender" validate:"required"`
 }

@@ -24,15 +24,31 @@ func (s *Storage) SearchUserById(id primitive.ObjectID) *mongo.SingleResult {
 	return s.UserModel.FindOne(context, filter)
 }
 
-func (s *Storage) UpdateUserById(id primitive.ObjectID, data types.UpgradeRouteReqBody) *mongo.SingleResult {
+func (s *Storage) UpdateUserById(id primitive.ObjectID, update bson.M) *mongo.SingleResult {
 	filter := bson.M{"_id": id}
 	context := s.Ctx
-	update := bson.M{
-		"$set": bson.M{
-			"name":   data.Name,
-			"email":  data.Email,
-			"gender": data.Gender,
-		},
-	}
 	return s.UserModel.FindOneAndUpdate(context, filter, update)
+}
+
+func (s *Storage) ClientIDExistsInFollowers(filter bson.M, clientID primitive.ObjectID) (bool,error) {
+	result := s.UserModel.FindOne(s.Ctx, filter)
+
+  if err := result.Err(); err != nil {
+		return false, err
+	}
+
+	var user types.User // Assuming you have a User struct defined
+  err := result.Decode(&user)
+	if err != nil {
+		return false, err
+	}
+
+	// Check if the client ID exists in the followers array
+	for _, follower := range user.Followers {
+		if follower == clientID {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }

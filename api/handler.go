@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"gopkg.in/mgo.v2/bson"
 )
 
 //Authorization handler
@@ -159,13 +160,21 @@ func putUserProfileUpdateHandler(c *fiber.Ctx) error {
 
 	updateBytes := c.Body()
 
-	var update types.UpgradeRouteReqBody
-	if err := json.Unmarshal(updateBytes, &update); err != nil {
+	var updateBody types.UpgradeRouteReqBody
+	if err := json.Unmarshal(updateBytes, &updateBody); err != nil {
 		errRes := types.NewErrorResponse(fiber.StatusBadRequest, err, "request body not valid")
 		return c.Status(fiber.StatusBadRequest).JSON(errRes)
 	}
 
-	result := Storage.UpdateUserById(userID, update)
+	updateQuery := bson.M{
+		"$set": bson.M{
+			"name":   updateBody.Name,
+			"email":  updateBody.Email,
+			"gender": updateBody.Gender,
+		},
+	}
+
+	result := Storage.UpdateUserById(userID, updateQuery)
 
 	var user types.User
 	if err := result.Decode(&user); err != nil {
@@ -179,7 +188,46 @@ func putUserProfileUpdateHandler(c *fiber.Ctx) error {
 
 // "/user/:id/follow"
 func putUserFollowOrUnFollowHandler(c *fiber.Ctx) error {
-	return nil
+	clientID := c.Locals("id").(primitive.ObjectID)
+	strID := c.Params("id")
+	userID, err := primitive.ObjectIDFromHex(strID)
+	if err != nil {
+		errRes := types.NewErrorResponse(fiber.StatusBadRequest, err, "User Id not valid")
+		return c.Status(fiber.StatusBadRequest).JSON(errRes)
+	}
+
+	isFollowed, err := Storage.ClientIDExistsInFollowers(bson.M{"_id": userID}, clientID)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			errRes := types.NewErrorResponse(fiber.StatusNotFound, err, "User not found")
+			return c.Status(fiber.StatusNotFound).JSON(errRes)
+		} else {
+			errRes := types.NewErrorResponse(fiber.StatusInternalServerError, err, "Database error while fetching data")
+			return c.Status(fiber.StatusInternalServerError).JSON(errRes)
+		}
+	}
+
+	// START FROM HERE
+	var userUpdateQuery bson.M   // update query for they user whose id was sent in url
+	var clientUpdateQuery bson.M // update query for the client who is sending request
+	if isFollowed == true {
+		userUpdateQuery = bson.M{"$pull": bson.M{"followers": clientID}}
+		clientUpdateQuery = bson.M{"$pull": bson.M{"following": userID}}
+	} else {
+		userUpdateQuery = bson.M{"$push": bson.M{"followers": clientID}}
+		clientUpdateQuery = bson.M{"$push": bson.M{"following": userID}}
+	}
+
+	userResult := Storage.UpdateUserById(userID, userUpdateQuery)
+	clientResult := Storage.UpdateUserById(clientID, clientUpdateQuery)
+
+	if userResult.Err() != nil || clientResult.Err() != nil {
+		errRes := types.NewErrorResponse(fiber.StatusInternalServerError, nil, "Database error while fetching data")
+		return c.Status(fiber.StatusInternalServerError).JSON(errRes)
+	}
+
+	res := types.NewSuccessResponse(fiber.StatusOK, nil, "OK")
+	return c.Status(fiber.StatusOK).JSON(res)
 }
 
 // "/user/search?q=search+query"
