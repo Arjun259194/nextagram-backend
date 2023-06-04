@@ -7,9 +7,8 @@ import (
 
 func setRoutes(server *fiber.App) {
 	setAuthRoutes(server)
-  setUserRoutes(server)
+	setUserRoutes(server)
 }
-
 
 func setAuthRoutes(server *fiber.App) {
 	//authorization routes
@@ -21,7 +20,7 @@ func setAuthRoutes(server *fiber.App) {
 func setUserRoutes(server *fiber.App) {
 	server.Get("/user/profile", utils.JWTMiddleware, getUserProfileHandler)
 	server.Get("/user/:id", utils.JWTMiddleware, getUserHandler)
-	server.Get("/user/search", utils.JWTMiddleware, getUserSearchHandler)
+	server.Get("/users/search", utils.JWTMiddleware, getUserSearchHandler)
 	server.Put("/user/:id/follow", utils.JWTMiddleware, putUserFollowOrUnFollowHandler)
 	server.Put("/user/profile", utils.JWTMiddleware, putUserProfileUpdateHandler)
 	server.Put("/user/password", utils.JWTMiddleware, putUserPasswordUpdateHandler)

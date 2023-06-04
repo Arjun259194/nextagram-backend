@@ -17,16 +17,6 @@ type SuccessResponse struct {
 	ResponseData interface{} `json:"responseData"`
 }
 
-// var StatusCode map[int]string = map[int]string{
-// 	400: "BAD_REQUEST",
-// 	404: "NOT_FOUND",
-// 	502: "BAD_GATEWAY",
-// 	200: "OK",
-// 	201: "CREATED",
-// 	500: "INTERNAL_SERVER_ERROR",
-// 	401: "UNAUTHORIZED",
-// }
-
 func NewErrorResponse(code int, err error, message string) ErrorResponse {
 	return ErrorResponse{
 		Status:  http.StatusText(code),

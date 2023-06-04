@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -11,6 +12,16 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"gopkg.in/mgo.v2/bson"
 )
+
+//structs
+
+// user data struct to send query search result
+type SearchUserDataResponse struct {
+	ID     primitive.ObjectID `json:"id" bson:"_id"`
+	Name   string             `json:"name" bson:"name"`
+	Email  string             `json:"email" bson:"email"`
+	Gender string             `json:"gender" bson:"gender"`
+}
 
 //Authorization handler
 
@@ -61,7 +72,9 @@ func postLoginHandler(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(errRes)
 	}
 
-	result := Storage.SearchUserByEmail(reqBody.Email)
+	filter := bson.M{"email": reqBody.Email}
+
+	result := Storage.GetOneUser(filter)
 
 	var foundUser types.User
 
@@ -105,7 +118,8 @@ func postLogoutHandler(c *fiber.Ctx) error {
 // "/user/profile"
 func getUserProfileHandler(c *fiber.Ctx) error {
 	userID := c.Locals("id").(primitive.ObjectID)
-	result := Storage.SearchUserById(userID)
+	filter := bson.M{"_id": userID}
+	result := Storage.GetOneUser(filter)
 
 	var user types.User
 	if err := result.Decode(&user); err != nil {
@@ -134,7 +148,9 @@ func getUserHandler(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(errRes)
 	}
 
-	result := Storage.SearchUserById(userID)
+	filter := bson.M{"_id": userID}
+
+	result := Storage.GetOneUser(filter)
 
 	var user types.User
 	if err := result.Decode(&user); err != nil {
@@ -230,9 +246,54 @@ func putUserFollowOrUnFollowHandler(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(res)
 }
 
-// "/user/search?q=search+query"
+// "/users/search?q=search+query"
 func getUserSearchHandler(c *fiber.Ctx) error {
-	return nil
+	searchQueryString := c.Query("q")
+
+	if searchQueryString == "" || len(searchQueryString) <= 3 {
+		res := types.NewSuccessResponse(fiber.StatusBadRequest, nil, "query is not valid size")
+		return c.Status(fiber.StatusBadRequest).JSON(res)
+	}
+
+	filter := bson.M{
+		"name": bson.M{
+			"$regex": searchQueryString, "$options": "i",
+		},
+	}
+
+	projection := bson.M{
+		"name":   1,
+		"email":  1,
+		"gender": 1,
+	}
+
+	result, err := Storage.GetUsersWithProjection(filter, projection)
+
+	if err != nil {
+		var (
+			status int
+			errRes types.ErrorResponse
+		)
+		if err == mongo.ErrNoDocuments {
+			status = fiber.StatusNotFound
+			errRes = types.NewErrorResponse(status, err, "No user found")
+		} else {
+			status = fiber.StatusInternalServerError
+			errRes = types.NewErrorResponse(status, err, "Error while fetching from database")
+		}
+		return c.Status(status).JSON(errRes)
+	}
+
+	var users []SearchUserDataResponse
+
+	if err := result.All(context.Background(), &users); err != nil {
+		errRes := types.NewErrorResponse(fiber.StatusInternalServerError, err, "Error while decoding data")
+		return c.Status(fiber.StatusInternalServerError).JSON(errRes)
+	}
+
+	res := types.NewSuccessResponse(fiber.StatusOK, users, fmt.Sprintf("Users found with query string %s", searchQueryString))
+	return c.Status(fiber.StatusOK).JSON(res)
+
 }
 
 // "user/passwordChange"

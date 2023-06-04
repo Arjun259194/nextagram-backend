@@ -4,6 +4,7 @@ import (
 	"github.com/Arjun259194/nextagram-backend/types"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -12,16 +13,19 @@ func (s *Storage) CreateUser(user *types.User) (*mongo.InsertOneResult, error) {
 	return s.UserModel.InsertOne(context, user)
 }
 
-func (s *Storage) SearchUserByEmail(email string) *mongo.SingleResult {
-	filter := bson.M{"email": email}
+func (s *Storage) GetOneUser(filter bson.M) *mongo.SingleResult {
 	context := s.Ctx
 	return s.UserModel.FindOne(context, filter)
 }
 
-func (s *Storage) SearchUserById(id primitive.ObjectID) *mongo.SingleResult {
-	filter := bson.M{"_id": id}
+func (s *Storage) GetUsers(filter bson.M) (*mongo.Cursor, error) {
 	context := s.Ctx
-	return s.UserModel.FindOne(context, filter)
+	return s.UserModel.Find(context, filter)
+}
+
+func (s *Storage) GetUsersWithProjection(filter bson.M, projection bson.M) (*mongo.Cursor, error) {
+	context := s.Ctx
+	return s.UserModel.Find(context, filter, options.Find().SetProjection(projection))
 }
 
 func (s *Storage) UpdateUserById(id primitive.ObjectID, update bson.M) *mongo.SingleResult {
@@ -30,15 +34,15 @@ func (s *Storage) UpdateUserById(id primitive.ObjectID, update bson.M) *mongo.Si
 	return s.UserModel.FindOneAndUpdate(context, filter, update)
 }
 
-func (s *Storage) ClientIDExistsInFollowers(filter bson.M, clientID primitive.ObjectID) (bool,error) {
+func (s *Storage) ClientIDExistsInFollowers(filter bson.M, clientID primitive.ObjectID) (bool, error) {
 	result := s.UserModel.FindOne(s.Ctx, filter)
 
-  if err := result.Err(); err != nil {
+	if err := result.Err(); err != nil {
 		return false, err
 	}
 
 	var user types.User // Assuming you have a User struct defined
-  err := result.Decode(&user)
+	err := result.Decode(&user)
 	if err != nil {
 		return false, err
 	}
