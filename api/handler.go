@@ -298,5 +298,60 @@ func getUserSearchHandler(c *fiber.Ctx) error {
 
 // "user/passwordChange"
 func putUserPasswordUpdateHandler(c *fiber.Ctx) error {
-	return nil
+
+	userID := c.Locals("id").(primitive.ObjectID)
+
+	updateBytes := c.Body()
+
+	var updateBody types.PasswordUpdateRequestBody
+	if err := json.Unmarshal(updateBytes, &updateBody); err != nil {
+		errRes := types.NewErrorResponse(fiber.StatusBadRequest, err, "request body not valid")
+		return c.Status(fiber.StatusBadRequest).JSON(errRes)
+	}
+
+	filter := bson.M{
+		"_id": userID,
+	}
+	result := Storage.GetOneUser(filter)
+
+	var user types.User
+	if err := result.Decode(&user); err != nil {
+		if err == mongo.ErrNoDocuments {
+			var errRes types.ErrorResponse
+			if err == mongo.ErrNoDocuments {
+				errRes = types.NewErrorResponse(fiber.StatusNotFound, err, "User not found")
+				return c.Status(fiber.StatusNotFound).JSON(errRes)
+			} else {
+				errRes = types.NewErrorResponse(fiber.StatusInternalServerError, err, "Error while fetching user from database")
+				return c.SendStatus(fiber.StatusInternalServerError)
+			}
+		}
+	}
+
+	if err := utils.ComparePasswords(user.Password, updateBody.OldPassword); err != nil {
+		errRes := types.NewErrorResponse(fiber.StatusUnauthorized, err, "Password not matching")
+		return c.Status(fiber.StatusUnauthorized).JSON(errRes)
+	}
+
+	newPassword, err := utils.HashPassword(updateBody.NewPassword)
+	if err != nil {
+		errRes := types.NewErrorResponse(fiber.StatusInternalServerError, err, "Failed to encrypt password")
+		return c.Status(fiber.StatusInternalServerError).JSON(errRes)
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"password": newPassword,
+		},
+	}
+
+	updateResult := Storage.UpdateUserById(userID, update)
+
+	if err := updateResult.Err(); err != nil {
+		errRes := types.NewErrorResponse(fiber.StatusInternalServerError, err, "Failed to update password")
+		return c.Status(fiber.StatusInternalServerError).JSON(errRes)
+	}
+
+	res := types.NewSuccessResponse(fiber.StatusOK, nil, "Password changed")
+	return c.Status(fiber.StatusOK).JSON(res)
 }

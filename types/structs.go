@@ -76,3 +76,8 @@ type UpgradeRouteReqBody struct {
 	Email  string `json:"email" validate:"required"`
 	Gender string `json:"gender" validate:"required"`
 }
+
+type PasswordUpdateRequestBody struct {
+	OldPassword string `json:"oldPassword" bson:"oldPassword"`
+	NewPassword string `json:"newPassword" bson:"newPassword"`
+}
