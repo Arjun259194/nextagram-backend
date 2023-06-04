@@ -13,14 +13,21 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-//structs
-
-// user data struct to send query search result
-type SearchUserDataResponse struct {
+// structs
+type searchUserDataResponse struct {
 	ID     primitive.ObjectID `json:"id" bson:"_id"`
 	Name   string             `json:"name" bson:"name"`
 	Email  string             `json:"email" bson:"email"`
 	Gender string             `json:"gender" bson:"gender"`
+}
+
+type userDataWithoutPassword struct {
+	ID        primitive.ObjectID   `json:"id" bson:"_id"`
+	Name      string               `json:"name" bson:"name"`
+	Email     string               `json:"email" bson:"email"`
+	Gender    string               `json:"gender" bson:"gender"`
+	Followers []primitive.ObjectID `json:"followers" bson:"followers"`
+	Following []primitive.ObjectID `json:"following" bson:"following"`
 }
 
 //Authorization handler
@@ -119,9 +126,16 @@ func postLogoutHandler(c *fiber.Ctx) error {
 func getUserProfileHandler(c *fiber.Ctx) error {
 	userID := c.Locals("id").(primitive.ObjectID)
 	filter := bson.M{"_id": userID}
-	result := Storage.GetOneUser(filter)
+	projection := bson.M{
+		"name":      1,
+		"email":     1,
+		"gender":    1,
+		"followers": 1,
+		"following": 1,
+	}
+	result := Storage.GetOneUserWithProjection(filter, projection)
 
-	var user types.User
+	var user userDataWithoutPassword
 	if err := result.Decode(&user); err != nil {
 		if err == mongo.ErrNoDocuments {
 			var errRes types.ErrorResponse
@@ -284,7 +298,7 @@ func getUserSearchHandler(c *fiber.Ctx) error {
 		return c.Status(status).JSON(errRes)
 	}
 
-	var users []SearchUserDataResponse
+	var users []searchUserDataResponse
 
 	if err := result.All(context.Background(), &users); err != nil {
 		errRes := types.NewErrorResponse(fiber.StatusInternalServerError, err, "Error while decoding data")

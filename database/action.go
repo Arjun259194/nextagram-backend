@@ -18,6 +18,11 @@ func (s *Storage) GetOneUser(filter bson.M) *mongo.SingleResult {
 	return s.UserModel.FindOne(context, filter)
 }
 
+func (s *Storage) GetOneUserWithProjection(filter bson.M, projection bson.M) *mongo.SingleResult {
+	context := s.Ctx
+	return s.UserModel.FindOne(context, filter, options.FindOne().SetProjection(projection))
+}
+
 func (s *Storage) GetUsers(filter bson.M) (*mongo.Cursor, error) {
 	context := s.Ctx
 	return s.UserModel.Find(context, filter)
