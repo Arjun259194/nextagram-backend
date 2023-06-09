@@ -18,10 +18,10 @@ func setAuthRoutes(server *fiber.App) {
 }
 
 func setUserRoutes(server *fiber.App) {
-	server.Get("/user/profile", utils.JWTMiddleware, getUserProfileHandler)
-	server.Get("/user/:id", utils.JWTMiddleware, getUserHandler)
-	server.Get("/users/search", utils.JWTMiddleware, getUserSearchHandler)
-	server.Put("/user/:id/follow", utils.JWTMiddleware, putUserFollowOrUnFollowHandler)
-	server.Put("/user/profile", utils.JWTMiddleware, putUserProfileUpdateHandler)
-	server.Put("/user/password", utils.JWTMiddleware, putUserPasswordUpdateHandler)
+	server.Get("/user/profile", utils.JWTMiddleware, ctrl.GetUserProfileHandler)
+	server.Get("/user/:id", utils.JWTMiddleware, ctrl.GetUserHandler)
+	server.Get("/users/search", utils.JWTMiddleware, ctrl.GetUserSearchHandler)
+	server.Put("/user/:id/follow", utils.JWTMiddleware, ctrl.PutUserFollowOrUnFollowHandler)
+	server.Put("/user/profile", utils.JWTMiddleware, ctrl.PutUserProfileUpdateHandler)
+	server.Put("/user/password", utils.JWTMiddleware, ctrl.PutUserPasswordUpdateHandler)
 }
