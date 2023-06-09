@@ -17,23 +17,6 @@ func main() {
 }
 
 // app.Post("/upload", func(c *fiber.Ctx) error {
-// 	file, err := c.FormFile("file")
-// 	if err != nil {
-// 		return c.Status(502).Send([]byte("error getting file from form"))
-// 	}
-
-// 	err = c.SaveFile(file, fmt.Sprintf("./uploads/%s", file.Filename))
-// 	if err != nil {
-// 		return c.Status(502).Send([]byte("Error saving file"))
-// 	}
-
-// 	// Create the URL for the saved image dynamically
-// 	imageURL := fmt.Sprintf("http://%s/images/%s", c.Hostname(), file.Filename)
-
-// 	// Send the URL in the response
-// 	return c.JSON(fiber.Map{
-// 		"url": imageURL,
-// 	})
 // })
 
 

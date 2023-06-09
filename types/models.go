@@ -31,3 +31,13 @@ type Post struct {
 	ImageURL  string               `json:"imageURL" bson:"imageURL"`
 	Likes     []primitive.ObjectID `bson:"likes,omitempty"`
 }
+
+func NewPost(title, imageURL string, userID primitive.ObjectID) *Post {
+	return &Post{
+		ID:        primitive.NewObjectID(),
+		Title:     title,
+		ImageURL:  imageURL,
+		CreatorId: userID,
+		Likes:     make([]primitive.ObjectID, 0),
+	}
+}

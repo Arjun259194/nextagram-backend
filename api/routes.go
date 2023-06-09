@@ -6,8 +6,11 @@ import (
 )
 
 func setRoutes(server *fiber.App) {
+	server.Static("/images", "./uploads") // static path to server images from server
+
 	setAuthRoutes(server)
 	setUserRoutes(server)
+	setPostRoutes(server)
 }
 
 func setAuthRoutes(server *fiber.App) {
@@ -24,4 +27,9 @@ func setUserRoutes(server *fiber.App) {
 	server.Put("/user/:id/follow", utils.JWTMiddleware, ctrl.PutUserFollowOrUnFollowHandler)
 	server.Put("/user/profile", utils.JWTMiddleware, ctrl.PutUserProfileUpdateHandler)
 	server.Put("/user/password", utils.JWTMiddleware, ctrl.PutUserPasswordUpdateHandler)
+}
+
+func setPostRoutes(server *fiber.App) {
+	server.Get("/posts", utils.JWTMiddleware, ctrl.GetTopPosts)
+  server.Post("/post", utils.JWTMiddleware, ctrl.PostCreatePost)
 }

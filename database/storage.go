@@ -14,6 +14,7 @@ type Storage struct {
 	ConnectionString string
 	Client           *mongo.Client
 	UserModel        *mongo.Collection
+	PostModel        *mongo.Collection
 	Ctx              context.Context
 }
 
@@ -41,6 +42,7 @@ func (s *Storage) Connect() {
 
 	s.Client = client
 	s.UserModel = client.Database("nextagram").Collection("user")
+	s.PostModel = client.Database("nextagram").Collection("post")
 
 	// Create unique index on email field
 	indexModel := mongo.IndexModel{
