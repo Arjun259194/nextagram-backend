@@ -1,4 +1,4 @@
-package api
+package controllers
 
 import (
 	"encoding/json"
@@ -9,9 +9,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"gopkg.in/mgo.v2/bson"
 )
-//Authorization handler
+
+// Authorization handler
 // "/auth/register"
-func postRegisterHandler(c *fiber.Ctx) error {
+func (ctrl *Controllers) PostRegisterHandler(c *fiber.Ctx) error {
 	reqBodyByte := c.Body()
 	var reqBody types.RegisterRequestBody
 
@@ -33,7 +34,7 @@ func postRegisterHandler(c *fiber.Ctx) error {
 
 	user := types.NewUser(reqBody.Name, reqBody.Email, reqBody.Gender, hashedPassword)
 
-	if _, err = storage.CreateUser(user); err != nil {
+	if _, err = ctrl.DB.CreateUser(user); err != nil {
 		errRes := types.NewErrorResponse(fiber.StatusInternalServerError, err, "Error while inserting into database")
 		return c.Status(fiber.StatusInternalServerError).JSON(errRes)
 	}
@@ -43,7 +44,7 @@ func postRegisterHandler(c *fiber.Ctx) error {
 }
 
 // "/auth/login"
-func postLoginHandler(c *fiber.Ctx) error {
+func (ctrl *Controllers) PostLoginHandler(c *fiber.Ctx) error {
 	reqBodyByte := c.Body()
 	var reqBody types.LoginRequestBody
 
@@ -59,7 +60,7 @@ func postLoginHandler(c *fiber.Ctx) error {
 
 	filter := bson.M{"email": reqBody.Email}
 
-	result := storage.GetOneUser(filter)
+	result := ctrl.DB.GetOneUser(filter)
 
 	var foundUser types.User
 
@@ -92,9 +93,8 @@ func postLoginHandler(c *fiber.Ctx) error {
 }
 
 // "/auth/logout"
-func postLogoutHandler(c *fiber.Ctx) error {
+func (ctrl *Controllers) PostLogoutHandler(c *fiber.Ctx) error {
 	cookie := utils.EmptyCookie()
 	c.Cookie(cookie)
 	return c.SendStatus(fiber.StatusOK)
 }
-

@@ -33,7 +33,7 @@ type userDataWithoutPassword struct {
 //User handler
 
 // "/user/profile"
-func (u *Controllers) GetUserProfileHandler(c *fiber.Ctx) error {
+func (ctrl *Controllers) GetUserProfileHandler(c *fiber.Ctx) error {
 	userID := c.Locals("id").(primitive.ObjectID)
 	filter := bson.M{"_id": userID}
 	projection := bson.M{
@@ -43,7 +43,7 @@ func (u *Controllers) GetUserProfileHandler(c *fiber.Ctx) error {
 		"followers": 1,
 		"following": 1,
 	}
-	result := u.DB.GetOneUserWithProjection(filter, projection)
+	result := ctrl.DB.GetOneUserWithProjection(filter, projection)
 
 	var user userDataWithoutPassword
 	if err := result.Decode(&user); err != nil {
@@ -64,7 +64,7 @@ func (u *Controllers) GetUserProfileHandler(c *fiber.Ctx) error {
 }
 
 // "/user/:id"
-func (u *Controllers) GetUserHandler(c *fiber.Ctx) error {
+func (ctrl *Controllers) GetUserHandler(c *fiber.Ctx) error {
 	strID := c.Params("id")
 	userID, err := primitive.ObjectIDFromHex(strID)
 	if err != nil {
@@ -74,7 +74,7 @@ func (u *Controllers) GetUserHandler(c *fiber.Ctx) error {
 
 	filter := bson.M{"_id": userID}
 
-	result := u.DB.GetOneUser(filter)
+	result := ctrl.DB.GetOneUser(filter)
 
 	var user types.User
 	if err := result.Decode(&user); err != nil {
@@ -95,7 +95,7 @@ func (u *Controllers) GetUserHandler(c *fiber.Ctx) error {
 }
 
 // "/user/profile"
-func (u *Controllers) PutUserProfileUpdateHandler(c *fiber.Ctx) error {
+func (ctrl *Controllers) PutUserProfileUpdateHandler(c *fiber.Ctx) error {
 	userID := c.Locals("id").(primitive.ObjectID)
 
 	updateBytes := c.Body()
@@ -114,7 +114,7 @@ func (u *Controllers) PutUserProfileUpdateHandler(c *fiber.Ctx) error {
 		},
 	}
 
-	result := u.DB.UpdateUserById(userID, updateQuery)
+	result := ctrl.DB.UpdateUserById(userID, updateQuery)
 
 	var user types.User
 	if err := result.Decode(&user); err != nil {

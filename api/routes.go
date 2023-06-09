@@ -12,9 +12,9 @@ func setRoutes(server *fiber.App) {
 
 func setAuthRoutes(server *fiber.App) {
 	//authorization routes
-	server.Post("/auth/register", postRegisterHandler)
-	server.Post("/auth/login", postLoginHandler)
-	server.Post("/auth/logout", postLogoutHandler)
+	server.Post("/auth/register", ctrl.PostRegisterHandler)
+	server.Post("/auth/login", ctrl.PostLoginHandler)
+	server.Post("/auth/logout", ctrl.PostLogoutHandler)
 }
 
 func setUserRoutes(server *fiber.App) {
